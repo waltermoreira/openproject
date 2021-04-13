@@ -1,0 +1,137 @@
+version: "3.7"
+
+networks:
+  frontend:
+  backend:
+
+volumes:
+  pgdata:
+  opdata:
+
+x-op-restart-policy: &restart_policy
+  restart: unless-stopped
+x-op-image: &image
+  image: openproject/community:${TAG:-11}
+x-op-app: &app
+  <<: *image
+  <<: *restart_policy
+  environment:
+    RAILS_CACHE_STORE: "memcache"
+    OPENPROJECT_CACHE__MEMCACHE__SERVER: "cache:11211"
+    OPENPROJECT_RAILS__RELATIVE__URL__ROOT: "${OPENPROJECT_RAILS__RELATIVE__URL__ROOT:-}"
+    DATABASE_URL: "postgres://postgres:${POSTGRES_PASSWORD}@db/openproject"
+    USE_PUMA: "true"
+    # set to true to enable the email receiving feature. See ./docker/cron for more options
+    IMAP_ENABLED: "${IMAP_ENABLED:-false}"
+  volumes:
+    - "opdata:/var/openproject/assets"
+
+services:
+  traefik:
+    image: traefik:latest
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      - "./proxy/traefik.toml:/traefik.toml"
+      - "./proxy/traefik_dynamic.toml:/traefik_dynamic.toml"
+      - "./proxy/acme.json:/acme.json"
+      - "./proxy/users:/users"
+    ports:
+      - target: 80
+        published: 80
+      - target: 443
+        published: 443
+    networks:
+      - frontend
+
+  my_app:
+    build: .
+    environment:
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
+    ports:
+      - "3456:5000"
+      # - target: 5000
+      #   published: 3456
+    labels:
+      - traefik.http.routers.my_app.rule=(Host(`bar.discoball.life`) && PathPrefix(`/foo`))
+      - traefik.http.routers.my_app.tls=true
+      - traefik.http.routers.my_app.tls.certresolver=lets-encrypt
+      - traefik.http.middlewares.nofoo.stripprefix.prefixes=/foo
+      - traefik.http.routers.my_app.middlewares=nofoo@docker
+      - traefik.port=80
+    networks:
+      - frontend
+
+  db:
+    image: postgres:10
+    <<: *restart_policy
+    stop_grace_period: "3s"
+    volumes:
+      - "pgdata:/var/lib/postgresql/data"
+    environment:
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
+      POSTGRES_DB: openproject
+    networks:
+      - backend
+
+  cache:
+    image: memcached
+    <<: *restart_policy
+    networks:
+      - backend
+
+  proxy:
+    <<: *image
+    <<: *restart_policy
+    command: "./docker/prod/proxy"
+    ports:
+      - "${PORT:-8080}:80"
+    environment:
+      APP_HOST: web
+      OPENPROJECT_RAILS__RELATIVE__URL__ROOT: "${OPENPROJECT_RAILS__RELATIVE__URL__ROOT:-}"
+    depends_on:
+      - web
+    labels:
+      - traefik.http.routers.proxy.rule=Host(`openproject.discoball.life`)
+      - traefik.http.routers.proxy.tls=true
+      - traefik.http.routers.proxy.tls.certresolver=lets-encrypt
+      - traefik.port=80
+    networks:
+      - frontend
+
+  web:
+    <<: *app
+    command: "./docker/prod/web"
+    networks:
+      - frontend
+      - backend
+    depends_on:
+      - db
+      - cache
+      - seeder
+
+  worker:
+    <<: *app
+    command: "./docker/prod/worker"
+    networks:
+      - backend
+    depends_on:
+      - db
+      - cache
+      - seeder
+
+  cron:
+    <<: *app
+    command: "./docker/prod/cron"
+    networks:
+      - backend
+    depends_on:
+      - db
+      - cache
+      - seeder
+
+  seeder:
+    <<: *app
+    command: "./docker/prod/seeder"
+    restart: on-failure
+    networks:
+      - backend

@@ -12,7 +12,6 @@
   dashboard = true
 
 [certificatesResolvers.lets-encrypt.acme]
-  caServer = "https://acme-staging-v02.api.letsencrypt.org/directory"
   email = "walter@discoball.life"
   storage = "acme.json"
   [certificatesResolvers.lets-encrypt.acme.tlsChallenge]

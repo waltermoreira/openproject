@@ -28,7 +28,7 @@ x-op-app: &app
 
 services:
   traefik:
-    image: traefik:latest
+    image: traefik:2.3.7
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"
       - "./proxy/traefik.toml:/traefik.toml"

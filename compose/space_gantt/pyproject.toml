@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "space_gantt"
+version = "0.1.0"
+description = ""
+authors = ["Walter Moreira <walter@waltermoreira.net>"]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+pygsheets = "^2.0.5"
+requests = "^2.25.1"
+pydantic = "^1.8.1"
+Flask = "^1.1.2"
+
+[tool.poetry.dev-dependencies]
+pytest = "^5.2"
+ipython = "^7.22.0"
+mypy = "^0.812"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+gantt = "space_gantt.app:main"

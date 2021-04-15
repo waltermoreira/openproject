@@ -1,0 +1,4 @@
+*.pickle
+*.swp
+__pycache__
+dist/

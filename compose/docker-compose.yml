@@ -61,6 +61,16 @@ services:
     networks:
       - frontend
 
+  gantt:
+    build: ./space_gantt
+    environment:
+      SPACE_TOKEN: "${SPACE_TOKEN}"
+      OPENPROJECT_KEY: "${OPENPROJECT_KEY}"
+    ports:
+      - "5000"
+    networks:
+      - backend
+
   db:
     image: postgres:10
     <<: *restart_policy

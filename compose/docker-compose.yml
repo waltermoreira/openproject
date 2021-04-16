@@ -66,8 +66,13 @@ services:
     environment:
       SPACE_TOKEN: "${SPACE_TOKEN}"
       OPENPROJECT_KEY: "${OPENPROJECT_KEY}"
-    ports:
+    expose:
       - "5000"
+    networks:
+      - backend
+
+  jobber:
+    build: ./jobber
     networks:
       - backend
 

@@ -1,4 +1,4 @@
-FROM jobber
+FROM jobber@sha256:10e354645c84f98fcb5b3a49b578e47d3ad16406e94d763e6e1784397fef208c
 
 USER root
 RUN apk add httpie

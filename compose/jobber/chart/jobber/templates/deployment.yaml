@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "jobber.fullname" . }}
+  labels:
+    {{- include "jobber.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "jobber.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "jobber.selectorLabels" . | nindent 8 }}
+    spec:
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000 
+      containers:
+        - name: {{ .Chart.Name }}-container
+          image: "{{ .Values.imageRepository }}/discoball/jobber@sha256:fdc0f7c853bd6e4c97cf5f469912e4ce792f6fc703dbc0c398c360d578860617"
+          volumeMounts:
+          - name: config
+            mountPath: "/config"
+          - name: shared
+            mountPath: "/home/jobberuser"
+      initContainers:
+      - name: copy-config
+        image: alpine@sha256:69e70a79f2d41ab5d637de98c1e0b055206ba40a8145e7bddb55ccc04e13cf8f
+        command: ["cp", "/config/.jobber", "/shared"]
+        volumeMounts:
+        - name: config
+          mountPath: "/config"
+        - name: shared
+          mountPath: "/shared"
+      volumes:
+      - name: config
+        configMap: 
+          name: {{ include "jobber.fullname" . }}
+      - name: shared
+        emptyDir: {}
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "jobber.fullname" . }}
+data:
+  .jobber: |
+    version: 1.4
+    jobs:
+      {{ .Values.jobs | nindent 6 }}

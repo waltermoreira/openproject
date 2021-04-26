@@ -3,10 +3,12 @@ version: "3.7"
 networks:
   frontend:
   backend:
+  backend2:
 
 volumes:
   pgdata:
   opdata:
+  opdata2:
 
 x-op-restart-policy: &restart_policy
   restart: unless-stopped
@@ -25,6 +27,14 @@ x-op-app: &app
     IMAP_ENABLED: "${IMAP_ENABLED:-false}"
   volumes:
     - "opdata:/var/openproject/assets"
+
+x-op-app2: &app2
+  <<: *app
+  environment:
+    DATABASE_URL: "postgres://postgres:${POSTGRES_PASSWORD}@db2/openproject"
+    OPENPROJECT_CACHE__MEMCACHE__SERVER: "cache2:11211"
+  volumes:
+    - "opdata2:/var/openproject/assets"
 
 services:
   traefik:
@@ -76,7 +86,7 @@ services:
     networks:
       - backend
 
-  db:
+  db: &orig_db
     image: postgres:10
     <<: *restart_policy
     stop_grace_period: "3s"
@@ -88,13 +98,25 @@ services:
     networks:
       - backend
 
-  cache:
+  db2:
+    <<: *orig_db
+    volumes:
+      - "pgdata2:/var/lib/postgresql/data"
+    networks:
+      - backend2
+
+  cache: &orig_cache
     image: memcached
     <<: *restart_policy
     networks:
       - backend
 
-  proxy:
+  cache2:
+    <<: *orig_cache
+    networks:
+      - backend2
+
+  proxy: &orig_proxy
     <<: *image
     <<: *restart_policy
     command: "./docker/prod/proxy"
@@ -113,7 +135,16 @@ services:
     networks:
       - frontend
 
-  web:
+  proxy2:
+    <<: *orig_proxy
+    depends_on:
+      - web2
+    labels:
+      - traefik.http.routers.proxy.rule=Host(`openproject2.discoball.life`)
+    networks:
+      - frontend
+
+  web: &orig_web
     <<: *app
     command: "./docker/prod/web"
     networks:
@@ -124,7 +155,17 @@ services:
       - cache
       - seeder
 
-  worker:
+  web2:
+    <<: *orig_web
+    networks:
+      - frontend
+      - backend2
+    depends_on:
+      - db2
+      - cache2
+      - seeder2
+
+  worker: &orig_worker
     <<: *app
     command: "./docker/prod/worker"
     networks:
@@ -134,7 +175,16 @@ services:
       - cache
       - seeder
 
-  cron:
+  worker2:
+    <<: *orig_worker
+    networks:
+      - backend2
+    depends_on:
+      - db2
+      - cache2
+      - seeder2
+
+  cron: &orig_cron
     <<: *app
     command: "./docker/prod/cron"
     networks:
@@ -144,9 +194,23 @@ services:
       - cache
       - seeder
 
-  seeder:
+  cron2:
+    <<: *orig_cron
+    networks:
+      - backend2
+    depends_on:
+      - db2
+      - cache2
+      - seeder2
+
+  seeder: &orig_seeder
     <<: *app
     command: "./docker/prod/seeder"
     restart: on-failure
     networks:
       - backend
+
+  seeder2:
+    <<: *orig_seeder
+    networks:
+      - backend2

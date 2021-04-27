@@ -1,1 +1,17 @@
-Set the jobs with ...
+# Jobber
+
+See repository at: https://github.com/dshearer/jobber
+See official image at: https://hub.docker.com/_/jobber
+
+We build our own derived image because we want to add `httpie`.
+
+
+## Configuration
+
+Define your jobs following `jobber` config structure and adding them to the
+value `jobs`:
+
+    jobs: |
+      MyJob:
+        cmd: ...
+        time: ...

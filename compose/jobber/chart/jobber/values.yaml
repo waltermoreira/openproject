@@ -2,13 +2,13 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
-replicaCount: 1
-
+# Repository for the `discoball/jobber` image.
 imageRepository: localhost:5000
 
 nameOverride: ""
 fullnameOverride: ""
 
+# Commands and frequencies for jobs in Jobber.
 jobs: |
   MyJob:
     cmd: echo "Hello Helm!!"

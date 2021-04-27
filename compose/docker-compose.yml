@@ -32,8 +32,13 @@ x-op-app: &app
 x-op-app2: &app2
   <<: *app
   environment:
-    DATABASE_URL: "postgres://postgres:${POSTGRES_PASSWORD}@db2/openproject"
+    RAILS_CACHE_STORE: "memcache"
     OPENPROJECT_CACHE__MEMCACHE__SERVER: "cache2:11211"
+    OPENPROJECT_RAILS__RELATIVE__URL__ROOT: "${OPENPROJECT_RAILS__RELATIVE__URL__ROOT:-}"
+    DATABASE_URL: "postgres://postgres:${POSTGRES_PASSWORD}@db2/openproject"
+    USE_PUMA: "true"
+    # set to true to enable the email receiving feature. See ./docker/cron for more options
+    IMAP_ENABLED: "${IMAP_ENABLED:-false}"
   volumes:
     - "opdata2:/var/openproject/assets"
 
@@ -142,6 +147,7 @@ services:
       - "8081:80"
     environment:
       APP_HOST: web2
+      OPENPROJECT_RAILS__RELATIVE__URL__ROOT: "${OPENPROJECT_RAILS__RELATIVE__URL__ROOT:-}"
     depends_on:
       - web2
     labels:

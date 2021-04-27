@@ -7,6 +7,7 @@ networks:
 
 volumes:
   pgdata:
+  pgdata2:
   opdata:
   opdata2:
 
@@ -81,11 +82,11 @@ services:
     networks:
       - backend
 
-  jobber:
-    build: ./jobber
-    networks:
-      - backend
-
+#  jobber:
+#    build: ./jobber
+#    networks:
+#      - backend
+#
   db: &orig_db
     image: postgres:10
     <<: *restart_policy
@@ -121,7 +122,7 @@ services:
     <<: *restart_policy
     command: "./docker/prod/proxy"
     ports:
-      - "${PORT:-8080}:80"
+      - "8080:80"
     environment:
       APP_HOST: web
       OPENPROJECT_RAILS__RELATIVE__URL__ROOT: "${OPENPROJECT_RAILS__RELATIVE__URL__ROOT:-}"
@@ -137,10 +138,17 @@ services:
 
   proxy2:
     <<: *orig_proxy
+    ports:
+      - "8081:80"
+    environment:
+      APP_HOST: web2
     depends_on:
       - web2
     labels:
-      - traefik.http.routers.proxy.rule=Host(`openproject2.discoball.life`)
+      - traefik.http.routers.proxy2.rule=Host(`openproject2.discoball.life`)
+      - traefik.http.routers.proxy2.tls=true
+      - traefik.http.routers.proxy2.tls.certresolver=lets-encrypt
+      - traefik.port=80
     networks:
       - frontend
 
@@ -157,6 +165,7 @@ services:
 
   web2:
     <<: *orig_web
+    <<: *app2
     networks:
       - frontend
       - backend2
@@ -177,6 +186,7 @@ services:
 
   worker2:
     <<: *orig_worker
+    <<: *app2
     networks:
       - backend2
     depends_on:
@@ -196,6 +206,7 @@ services:
 
   cron2:
     <<: *orig_cron
+    <<: *app2
     networks:
       - backend2
     depends_on:
@@ -212,5 +223,6 @@ services:
 
   seeder2:
     <<: *orig_seeder
+    <<: *app2
     networks:
       - backend2

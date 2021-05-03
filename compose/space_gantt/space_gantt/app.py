@@ -145,7 +145,7 @@ class OpenProjectAPI:
         )
 
     def clear_work_packages(self) -> None:
-        for item in self.get_all():
+        for item in list(self.get_all()):
             list(
                 self.request("delete", f"{self.base}/api/v3/work_packages/{item['id']}")
             )

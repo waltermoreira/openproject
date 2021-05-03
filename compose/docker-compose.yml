@@ -68,6 +68,9 @@ services:
       OPENPROJECT_KEY: "${OPENPROJECT_KEY}"
     expose:
       - "5000"
+    ports:
+      - target: 5000
+        published: 6000
     networks:
       - backend
 

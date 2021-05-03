@@ -235,7 +235,7 @@ def space_to_openproject(space: SpaceAPI, openproject: OpenProjectAPI) -> None:
         start = item.earliest_start
         logger.info("..Processing item '%s'", item.title)
         wp = openproject.create_work_package(
-            subject=item.title,
+            subject=f"[{item.id}] {item.title}",
             startDate=start.isoformat(),
             dueDate=(start + timedelta(days=item.duration)).isoformat(),
         )

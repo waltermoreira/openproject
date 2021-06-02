@@ -3,13 +3,13 @@ version: "3.7"
 networks:
   frontend:
   backend:
-  backend2:
+          # backend2:
 
 volumes:
   pgdata:
-  pgdata2:
+          #  pgdata2:
   opdata:
-  opdata2:
+          #  opdata2:
 
 x-op-restart-policy: &restart_policy
   restart: unless-stopped
@@ -29,18 +29,18 @@ x-op-app: &app
   volumes:
     - "opdata:/var/openproject/assets"
 
-x-op-app2: &app2
-  <<: *app
-  environment:
-    RAILS_CACHE_STORE: "memcache"
-    OPENPROJECT_CACHE__MEMCACHE__SERVER: "cache2:11211"
-    OPENPROJECT_RAILS__RELATIVE__URL__ROOT: "${OPENPROJECT_RAILS__RELATIVE__URL__ROOT:-}"
-    DATABASE_URL: "postgres://postgres:${POSTGRES_PASSWORD}@db2/openproject"
-    USE_PUMA: "true"
-    # set to true to enable the email receiving feature. See ./docker/cron for more options
-    IMAP_ENABLED: "${IMAP_ENABLED:-false}"
-  volumes:
-    - "opdata2:/var/openproject/assets"
+#x-op-app2: &app2
+#  <<: *app
+#  environment:
+#    RAILS_CACHE_STORE: "memcache"
+#    OPENPROJECT_CACHE__MEMCACHE__SERVER: "cache2:11211"
+#    OPENPROJECT_RAILS__RELATIVE__URL__ROOT: "${OPENPROJECT_RAILS__RELATIVE__URL__ROOT:-}"
+#    DATABASE_URL: "postgres://postgres:${POSTGRES_PASSWORD}@db2/openproject"
+#    USE_PUMA: "true"
+#    # set to true to enable the email receiving feature. See ./docker/cron for more options
+#    IMAP_ENABLED: "${IMAP_ENABLED:-false}"
+#  volumes:
+#    - "opdata2:/var/openproject/assets"
 
 services:
   traefik:
@@ -104,12 +104,12 @@ services:
     networks:
       - backend
 
-  db2:
-    <<: *orig_db
-    volumes:
-      - "pgdata2:/var/lib/postgresql/data"
-    networks:
-      - backend2
+#  db2:
+#    <<: *orig_db
+#    volumes:
+#      - "pgdata2:/var/lib/postgresql/data"
+#    networks:
+#      - backend2
 
   cache: &orig_cache
     image: memcached
@@ -117,10 +117,10 @@ services:
     networks:
       - backend
 
-  cache2:
-    <<: *orig_cache
-    networks:
-      - backend2
+#  cache2:
+#    <<: *orig_cache
+#    networks:
+#      - backend2
 
   proxy: &orig_proxy
     <<: *image
@@ -141,22 +141,22 @@ services:
     networks:
       - frontend
 
-  proxy2:
-    <<: *orig_proxy
-    ports:
-      - "8081:80"
-    environment:
-      APP_HOST: web2
-      OPENPROJECT_RAILS__RELATIVE__URL__ROOT: "${OPENPROJECT_RAILS__RELATIVE__URL__ROOT:-}"
-    depends_on:
-      - web2
-    labels:
-      - traefik.http.routers.proxy2.rule=Host(`openproject2.discoball.life`)
-      - traefik.http.routers.proxy2.tls=true
-      - traefik.http.routers.proxy2.tls.certresolver=lets-encrypt
-      - traefik.port=80
-    networks:
-      - frontend
+#  proxy2:
+#    <<: *orig_proxy
+#    ports:
+#      - "8081:80"
+#    environment:
+#      APP_HOST: web2
+#      OPENPROJECT_RAILS__RELATIVE__URL__ROOT: "${OPENPROJECT_RAILS__RELATIVE__URL__ROOT:-}"
+#    depends_on:
+#      - web2
+#    labels:
+#      - traefik.http.routers.proxy2.rule=Host(`openproject2.discoball.life`)
+#      - traefik.http.routers.proxy2.tls=true
+#      - traefik.http.routers.proxy2.tls.certresolver=lets-encrypt
+#      - traefik.port=80
+#    networks:
+#      - frontend
 
   web: &orig_web
     <<: *app
@@ -169,16 +169,16 @@ services:
       - cache
       - seeder
 
-  web2:
-    <<: *orig_web
-    <<: *app2
-    networks:
-      - frontend
-      - backend2
-    depends_on:
-      - db2
-      - cache2
-      - seeder2
+#  web2:
+#    <<: *orig_web
+#    <<: *app2
+#    networks:
+#      - frontend
+#      - backend2
+#    depends_on:
+#      - db2
+#      - cache2
+#      - seeder2
 
   worker: &orig_worker
     <<: *app
@@ -190,15 +190,15 @@ services:
       - cache
       - seeder
 
-  worker2:
-    <<: *orig_worker
-    <<: *app2
-    networks:
-      - backend2
-    depends_on:
-      - db2
-      - cache2
-      - seeder2
+#  worker2:
+#    <<: *orig_worker
+#    <<: *app2
+#    networks:
+#      - backend2
+#    depends_on:
+#      - db2
+#      - cache2
+#      - seeder2
 
   cron: &orig_cron
     <<: *app
@@ -210,15 +210,15 @@ services:
       - cache
       - seeder
 
-  cron2:
-    <<: *orig_cron
-    <<: *app2
-    networks:
-      - backend2
-    depends_on:
-      - db2
-      - cache2
-      - seeder2
+#  cron2:
+#    <<: *orig_cron
+#    <<: *app2
+#    networks:
+#      - backend2
+#    depends_on:
+#      - db2
+#      - cache2
+#      - seeder2
 
   seeder: &orig_seeder
     <<: *app
@@ -227,8 +227,8 @@ services:
     networks:
       - backend
 
-  seeder2:
-    <<: *orig_seeder
-    <<: *app2
-    networks:
-      - backend2
+#  seeder2:
+#    <<: *orig_seeder
+#    <<: *app2
+#    networks:
+#      - backend2
